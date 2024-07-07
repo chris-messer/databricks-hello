@@ -4,6 +4,20 @@
 
 # COMMAND ----------
 
+# MAGIC %run "../includes/configuration"
+
+# COMMAND ----------
+
+# MAGIC %run "../includes/common_functions"
+
+# COMMAND ----------
+
+dbutils.widgets.text('p_data_source','')
+data_source = dbutils.widgets.get('p_data_source')
+
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Step 1 - Read the CSV file
 
@@ -28,11 +42,7 @@ circuits_schema = StructType(fields=[StructField("circuitId",IntegerType(), Fals
 circuits_df = spark.read\
 .option("header", True)\
 .schema(circuits_schema)\
-.csv('dbfs:/mnt/f1dbhello/raw/circuits.csv', header = True)
-
-# COMMAND ----------
-
-display(circuits_df)
+.csv(f'{raw_folder_path}/circuits.csv', header = True)
 
 # COMMAND ----------
 
@@ -70,12 +80,15 @@ circuits_selected_df = circuits_df.select(
 
 # COMMAND ----------
 
+from pyspark.sql.functions import lit
+
 circuits_renamed_df = circuits_selected_df \
     .withColumnRenamed("circuitId","circuit_id") \
     .withColumnRenamed("circuitRef","circuit_ref") \
     .withColumnRenamed("lat","latitude") \
     .withColumnRenamed("lng","longitude") \
-    .withColumnRenamed("alt","altitude") 
+    .withColumnRenamed("alt","altitude") \
+    .withColumn('data_source',lit(data_source))
 
 # COMMAND ----------
 
@@ -88,12 +101,12 @@ from pyspark.sql.functions import current_timestamp, lit
 
 # COMMAND ----------
 
-circuits_final_df = circuits_renamed_df.withColumn('ingestion_date',current_timestamp()) \
+circuits_final_df = circuits_renamed_df\
     .withColumn('environment',lit('Production'))
 
 # COMMAND ----------
 
-display(circuits_final_df)
+circuits_final_df = add_ingestion_date(circuits_final_df)
 
 # COMMAND ----------
 
@@ -102,11 +115,10 @@ display(circuits_final_df)
 
 # COMMAND ----------
 
-# MAGIC %fs
-# MAGIC ls dbfs:/mnt/f1dbhello/processed/circuits
+circuits_final_df.write \
+    .mode('overwrite') \
+    .parquet(f'{processed_folder_path}/circuits')
 
 # COMMAND ----------
 
-circuits_final_df.write \
-    .mode('overwrite') \
-    .parquet('/mnt/f1dbhello/processed/circuits')
+dbutils.notebook.exit('Success')
