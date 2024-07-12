@@ -10,6 +10,8 @@
 # COMMAND ----------
 
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType, TimestampType
+dbutils.widgets.text('p_data_source','')
+data_source = dbutils.widgets.get('p_data_source')
 
 # COMMAND ----------
 
@@ -71,7 +73,8 @@ races_renamed_df = races_selected_df\
 from pyspark.sql.functions import to_timestamp, concat, lit
 
 races_transformed_df = races_renamed_df\
-    .withColumn('race_timestamp', to_timestamp(concat(col('date'), lit(' '), col('time')), 'yyyy-MM-dd HH:mm:ss'))
+    .withColumn('race_timestamp', to_timestamp(concat(col('date'), lit(' '), col('time')), 'yyyy-MM-dd HH:mm:ss'))\
+    .withColumn('data_source',lit(data_source))
 
 
 # COMMAND ----------
@@ -104,3 +107,7 @@ races_df_final.write \
 # COMMAND ----------
 
 display(spark.read.parquet('/mnt/f1dbhello/processed/races'))
+
+# COMMAND ----------
+
+dbutils.notebook.exit('Success')
