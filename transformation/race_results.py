@@ -12,11 +12,6 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 
 # COMMAND ----------
 
-# MAGIC %fs
-# MAGIC ls /mnt/f1dbhello/processed/
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Step 1 - Read files
 
@@ -28,22 +23,22 @@ from pyspark.sql.functions import col, current_timestamp
 
 
 
-races_df = spark.read.parquet(f'{processed_folder_path}/races')\
+races_df = spark.read.table('f1_processed.races')\
     .withColumnRenamed('name','race_name')\
     .withColumnRenamed('race_timestamp','race_date')
 
-circuits_df = spark.read.parquet(f'{processed_folder_path}/circuits')\
+circuits_df = spark.read.table(f'f1_processed.circuits')\
     .withColumnRenamed('location','circuit_location')
 
-drivers_df = spark.read.parquet(f'{processed_folder_path}/drivers')\
+drivers_df = spark.read.table(f'f1_processed.drivers')\
     .withColumnRenamed('name','driver_name')\
     .withColumnRenamed('number','driver_number')\
     .withColumnRenamed('nationality','driver_nationality')
 
-constructors_df = spark.read.parquet(f'{processed_folder_path}/constructors')\
+constructors_df = spark.read.table(f'f1_processed.constructors')\
     .withColumnRenamed('name','team')
     
-results_df = spark.read.parquet(f'{processed_folder_path}/results')\
+results_df = spark.read.table(f'f1_processed.results')\
     .withColumnRenamed('time','race_time')
 
 # COMMAND ----------
@@ -96,4 +91,4 @@ race_results_selected_df = (race_results_df
 
 (race_results_selected_df.write
  .mode('overwrite')
- .parquet(f'{presentation_folder_path}/race_results'))
+ .saveAsTable('f1_presentation.race_results'))

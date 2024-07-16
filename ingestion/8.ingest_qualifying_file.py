@@ -60,7 +60,12 @@ final_df = qualifying_df.withColumnRenamed("qualifyId", "qualify_id") \
 
 # COMMAND ----------
 
-final_df.write.mode("overwrite").parquet("/mnt/f1dbhello/processed/qualifying")
+# final_df.write.mode("overwrite").parquet("/mnt/f1dbhello/processed/qualifying")
+
+final_df.write \
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.qualifying")
 
 # COMMAND ----------
 

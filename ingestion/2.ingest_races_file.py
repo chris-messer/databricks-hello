@@ -12,6 +12,12 @@
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType, TimestampType
 dbutils.widgets.text('p_data_source','')
 data_source = dbutils.widgets.get('p_data_source')
+dbutils.widgets.text('p_file_date','')
+file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 
@@ -29,7 +35,7 @@ races_schema = StructType(fields=[StructField('raceId', IntegerType(), False),
 races_df = spark.read\
     .option('header', True)\
     .schema(races_schema)\
-    .csv('/mnt/f1dbhello/raw/races.csv')    
+    .csv(f'/mnt/f1dbhello/raw/{file_date}/races.csv')    
 
 # COMMAND ----------
 
@@ -89,7 +95,8 @@ races_df_final = races_transformed_df\
     col('name'),
     col('race_timestamp')
     )\
-    .withColumn('ingestion_date',current_timestamp())
+    .withColumn('ingestion_date',current_timestamp())\
+    .withColumn('file_date',file_date)
 
 
 # COMMAND ----------
@@ -99,14 +106,19 @@ races_df_final = races_transformed_df\
 
 # COMMAND ----------
 
-races_df_final.write \
-    .mode('overwrite') \
-    .partitionBy('race_year') \
-    .parquet('/mnt/f1dbhello/processed/races')
+# races_df_final.write \
+#     .mode('overwrite') \
+#     .partitionBy('race_year') \
+#     .parquet('/mnt/f1dbhello/processed/races')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/f1dbhello/processed/races'))
+ 
+races_df_final.write \
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.races")
+ 
 
 # COMMAND ----------
 

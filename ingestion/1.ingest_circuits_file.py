@@ -18,6 +18,11 @@ data_source = dbutils.widgets.get('p_data_source')
 
 # COMMAND ----------
 
+dbutils.widgets.text('p_file_date','')
+file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Step 1 - Read the CSV file
 
@@ -42,7 +47,7 @@ circuits_schema = StructType(fields=[StructField("circuitId",IntegerType(), Fals
 circuits_df = spark.read\
 .option("header", True)\
 .schema(circuits_schema)\
-.csv(f'{raw_folder_path}/circuits.csv', header = True)
+.csv(f'{raw_folder_path}/{file_date}/circuits.csv', header = True)
 
 # COMMAND ----------
 
@@ -88,7 +93,8 @@ circuits_renamed_df = circuits_selected_df \
     .withColumnRenamed("lat","latitude") \
     .withColumnRenamed("lng","longitude") \
     .withColumnRenamed("alt","altitude") \
-    .withColumn('data_source',lit(data_source))
+    .withColumn('data_source',lit(data_source))\
+    .withColumn('file_date',lit(file_date))
 
 # COMMAND ----------
 
@@ -115,9 +121,27 @@ circuits_final_df = add_ingestion_date(circuits_final_df)
 
 # COMMAND ----------
 
+processed_folder_path
+
+# COMMAND ----------
+
+# circuits_final_df.write \
+#     .mode('overwrite') \
+#     .parquet(f'{processed_folder_path}/circuits')
+
+# COMMAND ----------
+
+ 
 circuits_final_df.write \
-    .mode('overwrite') \
-    .parquet(f'{processed_folder_path}/circuits')
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.circuits")
+ 
+
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 

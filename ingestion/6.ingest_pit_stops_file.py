@@ -57,7 +57,13 @@ final_df = pit_stops_df.withColumnRenamed("driverId", "driver_id") \
 
 # COMMAND ----------
 
-final_df.write.mode("overwrite").parquet("/mnt/f1dbhello/processed/pit_stops")
+# final_df.write.mode("overwrite").parquet("/mnt/f1dbhello/processed/pit_stops")
+
+
+final_df.write \
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.pit_stops")
 
 # COMMAND ----------
 

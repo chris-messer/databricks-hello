@@ -41,8 +41,19 @@ circuits_df = (spark.read
 (
     circuits_df.write
             .format('delta')
+            .option('path',f'{raw_abfss}/circuits')
             .saveAsTable("f1_raw.circuits")
 )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DROP TABLE f1_raw.circuits
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESC EXTENDED f1_raw.circuits
 
 # COMMAND ----------
 
@@ -64,6 +75,11 @@ circuits_df = (spark.read
 # MAGIC   url STRING)
 # MAGIC USING csv
 # MAGIC OPTIONS (path "abfss://raw@f1dbhello.dfs.core.windows.net/races.csv", header true)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESC EXTENDED f1_raw.constructors;
 
 # COMMAND ----------
 

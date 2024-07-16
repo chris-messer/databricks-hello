@@ -9,6 +9,11 @@ data_source = dbutils.widgets.get('p_data_source')
 
 # COMMAND ----------
 
+dbutils.widgets.text('p_file_date','')
+file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Step 1 - Ingest json file
 
@@ -20,7 +25,7 @@ constructor_schema = 'constructorId INTEGER, constructorRef STRING, name STRING,
 
 constructor_df = spark.read\
     .schema(constructor_schema)\
-    .json('/mnt/f1dbhello/raw/constructors.json')
+    .json(f'/mnt/f1dbhello/raw/{file_date}/constructors.json')
 
 # COMMAND ----------
 
@@ -35,7 +40,8 @@ constructor_final_df = constructor_df\
     .withColumnRenamed('constructorId', 'constructor_id')\
     .withColumnRenamed('constructorRef','constructor_ref')\
     .withColumn('ingestion_date', current_timestamp())\
-    .withColumn('data_source',lit(data_source))
+    .withColumn('data_source',lit(data_source))\
+    .withColumn('file_date',lit(file_date))
 
 # COMMAND ----------
 
@@ -44,9 +50,16 @@ constructor_final_df = constructor_df\
 
 # COMMAND ----------
 
-constructor_final_df.write\
-    .mode('overwrite')\
-    .parquet('/mnt/f1dbhello/processed/constructors')
+# constructor_final_df.write\
+#     .mode('overwrite')\
+#     .parquet('/mnt/f1dbhello/processed/constructors')
+
+# COMMAND ----------
+
+constructor_final_df.write \
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.constructors")
 
 # COMMAND ----------
 
