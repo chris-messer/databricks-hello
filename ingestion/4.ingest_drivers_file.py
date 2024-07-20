@@ -8,6 +8,9 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType, 
 dbutils.widgets.text('p_data_source','')
 data_source = dbutils.widgets.get('p_data_source')
 
+dbutils.widgets.text('p_file_date','')
+file_date = dbutils.widgets.get('p_file_date')
+
 # COMMAND ----------
 
 name_schema = StructType(fields=[StructField('forename', StringType(), False),
@@ -27,7 +30,7 @@ driver_schema = StructType(fields=[StructField('driverId', IntegerType(), False)
 
 drivers_df = spark.read\
     .schema(driver_schema)\
-    .json('/mnt/f1dbhello/raw/drivers.json')
+    .json(f'/mnt/f1dbhello/raw/{file_date}/drivers.json')
 
 # COMMAND ----------
 
@@ -48,7 +51,8 @@ drivers_selected_df = drivers_df\
             lit(' '),
             col('name.surname')
             ))\
-    .withColumn('data_source',lit(data_source))
+    .withColumn('data_source',lit(data_source))\
+    .withColumn('file_date',lit(file_date))
 
 # COMMAND ----------
 
@@ -66,9 +70,14 @@ drivers_final_df = drivers_selected_df.drop(col('url'))
 
 # COMMAND ----------
 
-drivers_final_df.write\
-    .mode('overwrite')\
-    .parquet('/mnt/f1dbhello/processed/drivers')
+# drivers_final_df.write\
+#     .mode('overwrite')\
+#     .parquet('/mnt/f1dbhello/processed/drivers')
+    
+drivers_final_df.write \
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.drivers")
 
 # COMMAND ----------
 

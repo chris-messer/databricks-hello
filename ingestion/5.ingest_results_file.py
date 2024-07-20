@@ -8,6 +8,9 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType, 
 dbutils.widgets.text('p_data_source','')
 data_source = dbutils.widgets.get('p_data_source')
 
+dbutils.widgets.text('p_file_date','')
+file_date = dbutils.widgets.get('p_file_date')
+
 
 # COMMAND ----------
 
@@ -36,7 +39,7 @@ results_schema = StructType(fields=[
 
 results_df = spark.read\
     .schema(results_schema)\
-    .json('/mnt/f1dbhello/raw/results.json')
+    .json(f'/mnt/f1dbhello/raw/{file_date}/results.json')
 
 # COMMAND ----------
 
@@ -59,6 +62,7 @@ results_final_df = results_df\
     .withColumnRenamed('fastestLapSpeed','fastest_lap_speed')\
     .withColumn('ingestion_date', current_timestamp())\
     .withColumn('data_source',lit(data_source))\
+    .withColumn('file_date',lit(file_date))\
     .drop(col('statusId'))
 
 
@@ -69,17 +73,15 @@ results_final_df = results_df\
 
 # COMMAND ----------
 
-results_final_df.write\
-    .mode('overwrite')\
-    .partitionBy('race_id')\
-    .parquet('/mnt/f1dbhello/processed/results')
+# results_final_df.write\
+#     .mode('overwrite')\
+#     .partitionBy('race_id')\
+#     .parquet('/mnt/f1dbhello/processed/results')
 
-# COMMAND ----------
-
-# %fs
-# ls /mnt/f1dbhello/processed/results
-
-display(spark.read.parquet('/mnt/f1dbhello/processed/results'))
+results_final_df.write \
+ .mode('overwrite')\
+ .format('delta')\
+ .saveAsTable("f1_processed.results")
 
 # COMMAND ----------
 

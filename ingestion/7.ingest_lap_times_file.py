@@ -54,7 +54,12 @@ final_df = lap_times_df.withColumnRenamed("driverId", "driver_id") \
 
 # COMMAND ----------
 
-final_df.write.mode("overwrite").parquet("/mnt/f1dbhello/processed/lap_times")
+# final_df.write.mode("overwrite").parquet("/mnt/f1dbhello/processed/lap_times")
+
+final_df.write \
+ .format('delta')\
+ .mode('overwrite')\
+ .saveAsTable("f1_processed.lap_times")
 
 # COMMAND ----------
 

@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-race_results_df = spark.read.parquet(f"{presentation_folder_path}/race_results")
+race_results_df = spark.read.table("f1_presentation.race_results")
 
 # COMMAND ----------
 
@@ -24,3 +24,9 @@ from pyspark.sql.functions import desc, rank, asc
 
 driver_rank_spec = Window.partitionBy("race_year").orderBy(desc("total_points"), desc("wins"))
 final_df = driver_standings.withColumn("rank", rank().over(driver_rank_spec))
+
+# COMMAND ----------
+
+final_df.write\
+    .mode('overwrite')\
+    .saveAsTable('f1_presentation.driver_standings')
